@@ -72,11 +72,13 @@ const Edit = {
       console.log('formData');
       console.log(formData);
 
-       try {
+        try {
+        if (!formData.evidence) {
+          delete formData.evidence;
+        }
         const response = await Transactions.update({
           ...formData,
           id: this._getTransactionId(),
-          evidence: formData.evidence.name,
         });
         window.alert(`Transaction with id ${this._getTransactionId()} has been edited`);
         this._goToDashboardPage();
