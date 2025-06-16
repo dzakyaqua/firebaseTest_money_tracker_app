@@ -40,7 +40,11 @@ const Dashboard = {
 
         const recordId = event.target.dataset.recordId;
         try {
-          const response = await Transactions.destroy(recordId);
+          await Transactions.destroy(recordId);
+
+          if (evidencePath) {
+            await Transactions.destroyEvidence(evidencePath);
+  }
           window.alert('Transaction has been destroyed');
 
           window.location.href = '/';
@@ -124,8 +128,18 @@ const Dashboard = {
     const amountDetailRecord = document.querySelector('#recordDetailModal #amountDetailRecord');
     const descriptionDetailRecord = document.querySelector('#recordDetailModal #noteDetailRecord');
 
-    imgDetailRecord.setAttribute('src', transactionRecord.evidenceUrl);
-    imgDetailRecord.setAttribute('alt', transactionRecord.name);
+    // imgDetailRecord.setAttribute('src', transactionRecord.evidenceUrl);
+    // imgDetailRecord.setAttribute('alt', transactionRecord.name);
+
+    Transactions.getEvidenceURL(transactionRecord.evidence)
+      .then((url) => {
+        imgDetailRecord.setAttribute('src', url);
+        imgDetailRecord.setAttribute('alt', transactionRecord.name);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
     typeDetailRecord.textContent =
       transactionRecord.type === 'income' ? 'Pemasukan' : 'Pengeluaran';
     nameDetailRecord.textContent = transactionRecord.name;
@@ -155,8 +169,9 @@ const Dashboard = {
               <i class="bi bi-pen-fill me-1"></i>Edit
             </a>
             <a class="btn btn-sm btn-danger" href="#"
-               id="delete-${transactionRecord.id}"
-               data-record-id="${transactionRecord.id}"
+                id="delete-${transactionRecord.id}"
+                data-record-id="${transactionRecord.id}"
+                data-record-evidence="${transactionRecord.evidence}"
             >
               <i class="bi bi-trash3-fill me-1"></i>Delete
             </a>

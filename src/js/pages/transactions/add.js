@@ -55,15 +55,29 @@ const Add = {
       console.log(formData);
 
         try {
-        const response = await Transactions.store({
-          ...formData,
-          evidence: formData.evidence.name,
-        });
-        window.alert('New transaction added successfully');
-        this._goToDashboardPage();
-      } catch (error) {
-        console.error(error);
-      }
+          let filePath = null;
+          if (formData.evidence) {
+            // Validasi tipe file (opsional)
+            const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+            if (!allowedTypes.includes(formData.evidence.type)) {
+              window.alert('Format file tidak didukung!');
+              return;
+            }
+
+            filePath = await Transactions.storeEvidence(formData.evidence);
+          }
+
+          const response = await Transactions.store({
+            ...formData,
+            evidence: filePath,
+          });
+
+          window.alert('New transaction added successfully');
+          this._goToDashboardPage();
+        } catch (error) {
+          console.error(error);
+          window.alert('Terjadi kesalahan saat menambahkan transaksi.');
+        }
     }
   },
 

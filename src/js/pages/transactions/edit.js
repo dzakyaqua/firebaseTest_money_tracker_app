@@ -43,6 +43,7 @@ const Edit = {
 
     try {
       const response = await Transactions.getById(transactionId);
+      this._userTransaction = response;
       this._populateTransactionToForm(response);
 
     } catch (error) {
@@ -73,8 +74,11 @@ const Edit = {
       console.log(formData);
 
         try {
-        if (!formData.evidence) {
-          delete formData.evidence;
+        if (formData.evidence) {
+          // Delete old evidence
+          Transactions.destroyEvidence(this._userTransaction.evidence);
+          const storageResponse = await Transactions.storeEvidence(formData.evidence);
+          formData.evidence = storageResponse.metadata.fullPath;
         }
         const response = await Transactions.update({
           ...formData,
@@ -125,10 +129,19 @@ const Edit = {
 
     nameInput.value = transactionRecord.name;
     amountInput.value = transactionRecord.amount;
-    dateInput.value = transactionRecord.date.slice(0, 16);
+    dateRecord.value = transactionRecord.date.toDate().toISOString().slice(0, 16);
 
-    inputImagePreviewEdit.setAttribute('defaultImage', transactionRecord.evidenceUrl);
-    inputImagePreviewEdit.setAttribute('defaultImageAlt', transactionRecord.name);
+    // inputImagePreviewEdit.setAttribute('defaultImage', transactionRecord.evidenceUrl);
+    // inputImagePreviewEdit.setAttribute('defaultImageAlt', transactionRecord.name);
+
+    Transactions.getEvidenceURL(transactionRecord.evidence)
+      .then((url) => {
+        evidenceRecord.setAttribute('defaultImage', url);
+        evidenceRecord.setAttribute('defaultImageAlt', transactionRecord.name);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
 
     descriptionInput.value = transactionRecord.description;
 

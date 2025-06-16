@@ -12,6 +12,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
+import supabase from '../config/supabaseClient';
 // import ApiEndpoint from '../config/api-endpoint';
 
 const Transactions = {
@@ -55,6 +56,36 @@ const Transactions = {
     const transactionRef = doc(db, 'transactions', id);
     return await deleteDoc(transactionRef);
   },
+
+  async storeEvidence(file) {
+  const filePath = `transactions/${auth.currentUser.uid}/${Date.now()}-${file.name}`;
+  console.log('Uploading to:', filePath); // Tambahkan ini untuk debug
+
+  const { error } = await supabase.storage.from('money-tracker-app').upload(filePath, file);
+
+  if (error) {
+    console.error('Upload error:', error); // Tambahkan ini untuk cek errornya
+    throw error;
+  }
+
+  return filePath;
+},
+
+  async getEvidenceURL(fileFullPath) {
+  const { data, error } = supabase.storage.from('money-tracker-app').getPublicUrl(fileFullPath);
+
+  if (error) throw error;
+  return data.publicUrl;
+},
+
+  async destroyEvidence(fileFullPath) {
+  const { error } = await supabase.storage.from('money-tracker-app').remove([fileFullPath]);
+
+  if (error) throw error;
+  return true;
+}
+
+
 };
 
 export default Transactions;
